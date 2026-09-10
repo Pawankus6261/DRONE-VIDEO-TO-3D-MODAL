@@ -32,24 +32,31 @@ const Navbar = () => {
       </div>
 
       {/* Right-aligned buttons */}
-      {isAuthenticated && (
-        <div className="flex items-center space-x-4">
-          <Link
-            to="/profile"
-            className={`font-semibold ${
-              isActive('/profile') ? 'text-teal-500' : 'hover:underline'
-            }`}
-          >
-            Profile
-          </Link>
+      <div className="flex items-center space-x-4">
+        <Link
+          to="/profile"
+          className={`font-semibold ${
+            isActive('/profile') ? 'text-teal-500' : 'hover:underline'
+          }`}
+        >
+          Profile
+        </Link>
+        {isAuthenticated ? (
           <button
             onClick={() => logout({ returnTo: window.location.origin })}
             className="bg-teal-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-teal-600"
           >
             Log Out
           </button>
-        </div>
-      )}
+        ) : (
+          <Link
+            to="/login"
+            className="bg-teal-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-teal-600"
+          >
+            Log In
+          </Link>
+        )}
+      </div>
     </nav>
   );
 };

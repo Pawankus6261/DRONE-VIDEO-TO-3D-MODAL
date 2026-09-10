@@ -14,7 +14,7 @@ const CreateProjectPopup = ({ isOpen, onClose, onCreate }) => {
 
   const fetchExistingProjects = useCallback(async () => {
     try {
-      const userId = user?.sub?.split("|")[1];
+      const userId = user?.sub ? (user.sub.includes('|') ? user.sub.split('|')[1] : user.sub) : 'local_user';
       const response = await axios.get(
         `http://localhost:8000/s3/projects/${userId}`
       );
@@ -33,12 +33,20 @@ const CreateProjectPopup = ({ isOpen, onClose, onCreate }) => {
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile && selectedFile.name.endsWith(".zip")) {
+    if (!selectedFile) return;
+
+    const validExtensions = [".mp4", ".mov", ".avi", ".mkv", ".webm", ".zip"];
+    const isSupported = validExtensions.some((ext) =>
+      selectedFile.name.toLowerCase().endsWith(ext)
+    );
+
+    if (isSupported) {
       setFile(selectedFile);
       setUploadMessage("");
+      setErrorMessage("");
     } else {
       setFile(null);
-      setUploadMessage("Please upload a valid .zip file.");
+      setErrorMessage("Please upload a video file (.mp4, .mov, .avi) or .zip archive.");
     }
   };
 
@@ -72,15 +80,17 @@ const CreateProjectPopup = ({ isOpen, onClose, onCreate }) => {
     // Set loading state to true
     setIsSubmitting(true);
 
-    // Rename the file to match the project name (with .zip extension)
-    const renamedFile = new File([file], `${projectName}.zip`, {
+    // Preserve original extension (.mp4, .mov, .zip, etc.)
+    const ext = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : 'mp4';
+    const renamedFile = new File([file], `${projectName}.${ext}`, {
       type: file.type,
     });
 
+    const userId = user?.sub ? (user.sub.includes('|') ? user.sub.split('|')[1] : user.sub) : 'local_user';
     const formData = new FormData();
     formData.append("file", renamedFile);
     formData.append("projectName", projectName);
-    formData.append("userId", user.sub.split("|")[1]);
+    formData.append("userId", userId);
 
     try {
       const response = await axios.post(
@@ -150,7 +160,7 @@ const CreateProjectPopup = ({ isOpen, onClose, onCreate }) => {
               htmlFor="fileUpload"
               className="block text-gray-700 font-medium mb-2"
             >
-              Upload Dataset (.zip)
+              Upload Drone Video (.mp4, .mov) or Dataset (.zip)
             </label>
             <div 
               className="border border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
@@ -159,7 +169,7 @@ const CreateProjectPopup = ({ isOpen, onClose, onCreate }) => {
               <input
                 type="file"
                 id="fileUpload"
-                accept=".zip"
+                accept=".mp4,.mov,.avi,.mkv,.zip"
                 onChange={handleFileChange}
                 className="hidden"
                 disabled={isSubmitting}
@@ -199,7 +209,7 @@ const CreateProjectPopup = ({ isOpen, onClose, onCreate }) => {
                     </div>
                     <p className="text-gray-700 font-medium">Drag and drop your file here or click to browse</p>
                     <p className="text-gray-500 text-sm mt-1">
-                      Upload a zip file containing a video
+                      Upload your drone video (.mp4, .mov) or dataset (.zip)
                     </p>
                     <button
                       type="button"

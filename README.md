@@ -87,22 +87,38 @@ REACT_APP_BACKEND_URL=http://localhost:8000
 
 Note: The backend currently allows CORS from `http://localhost:3000`.
 
-## Install & Run
-### Backend
+## Quick Start (Run Both Backend & Frontend)
+
+You can run the entire application on your PC with a single command from the project root:
+
+```bash
+npm start
+```
+*(Or double-click `run.bat` on Windows)*
+
+This will concurrently launch:
+- **Backend API**: `http://localhost:8000`
+- **Frontend App**: `http://localhost:3000`
+
+> **Note on Authentication & Local Mode**:
+> Auto-redirect to Auth0 has been disabled. The app now starts directly in **Guest / Local Mode**, allowing you to view and interact with the UI without needing Auth0 credentials. If you want to connect real Auth0 authentication, you can configure your credentials in `frontend/.env` and click **Log In** from the navigation bar.
+
+### Or Run Individually
+#### Backend
 ```bash
 cd backend
 npm install
 npm start
 ```
-- Starts Express on `http://localhost:8000`
+Starts Express on `http://localhost:8000`
 
-### Frontend
+#### Frontend
 ```bash
 cd frontend
 npm install
 npm start
 ```
-- Starts React dev server on `http://localhost:3000`
+Starts React dev server on `http://localhost:3000`
 
 ## Core Backend Endpoints
 - `POST /s3/upload` — multipart upload to `s3://<bucket>/<userId>/<projectName>/<filename>`
@@ -156,4 +172,38 @@ Socket.IO broadcasts step-wise status updates to room `<userId>_<projectName>`.
 - Training fails early: ensure your zip contains a playable `.mp4` and that the instance can access S3
 - Long runs: the server emits heartbeats over Socket.IO; keep the browser open to see updates
 - CORS: backend allows origin `http://localhost:3000`; adjust in `backend/app.js` for other hosts
+
+---
+
+## 🛰️ SIH26158: Local-First Metric 3D Reconstruction & COLMAP Integration
+
+This project now includes a **100% Local-First Reconstruction Pipeline** optimized for NVIDIA RTX 3050 (4GB VRAM) and Ryzen CPUs:
+
+### Features:
+- **COLMAP SfM Integration**: Cloned from [https://github.com/colmap/colmap.git](https://github.com/colmap/colmap.git) into `external/colmap` and powered by `pycolmap` for industrial-grade SIFT feature extraction and bundle adjustment.
+- **Dense Depth & Confidence Mapping**: Parallax motion estimation, bilateral edge-preserving smoothing, and Turbo colormap export.
+- **Pinhole Point Cloud Fusion**: Multi-view back-projection ($P_{world} = R_i^T(P_{cam} - t_i)$) with real RGB colors, voxel downsampling, and statistical outlier filtering (300k+ points).
+- **2.5D Delaunay Surface Reconstruction**: Realistic terrain/structure surface mesh exported to Wavefront OBJ with vertex colors.
+- **Interactive Web Inspector**:
+  - Full 3D viewer with solid mesh, wireframe, and dense point cloud modes.
+  - Interactive **Dense Depth & Confidence Analysis Drawer** right inside the browser.
+
+### Running with COLMAP & Depth Anything V2:
+```bash
+# Run with automatic engine selection (uses COLMAP if available, with OpenCV fallback):
+python reconstruct.py "workspace/hjgjghjghj/hjgjghjghj.mp4" --project-id "hjgjghjghj" --engine auto
+
+# Explicitly force COLMAP engine:
+python reconstruct.py "workspace/hjgjghjghj/hjgjghjghj.mp4" --project-id "hjgjghjghj" --engine colmap
+
+# Run with Depth Anything V2 (Neural Foundation Model Depth Estimation):
+python reconstruct.py "workspace/hjgjghjghj/hjgjghjghj.mp4" --project-id "hjgjghjghj" --depth-method depth_anything
+```
+
+### Depth Anything V2 Neural Depth Integration:
+- Cloned from [https://github.com/DepthAnything/Depth-Anything-V2.git](https://github.com/DepthAnything/Depth-Anything-V2.git) into `external/Depth-Anything-V2`.
+- Pre-trained ViT-S weights stored in `external/Depth-Anything-V2/checkpoints/depth_anything_v2_vits.pth`.
+- Generates high-fidelity per-pixel relative depth maps with crisp structural edges, automatically aligned with metric camera trajectories.
+- Seamless fallback to optical-flow parallax estimation if running on CPU or unsupported hardware.
+
 

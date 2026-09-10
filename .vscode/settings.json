@@ -1,0 +1,7 @@
+{
+  "python.defaultInterpreterPath": "C:/Users/ASUS/AppData/Local/Programs/Python/Python313/python.exe",
+  "python.pyrefly.configPath": "${workspaceFolder}/pyrefly.toml",
+  "python.analysis.extraPaths": [
+    "C:/Users/ASUS/AppData/Local/Programs/Python/Python313/Lib/site-packages"
+  ]
+}

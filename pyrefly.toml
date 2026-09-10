@@ -1,0 +1,4 @@
+python-interpreter-path = "C:/Users/ASUS/AppData/Local/Programs/Python/Python313/python.exe"
+site-package-path = [
+    "C:/Users/ASUS/AppData/Local/Programs/Python/Python313/Lib/site-packages"
+]

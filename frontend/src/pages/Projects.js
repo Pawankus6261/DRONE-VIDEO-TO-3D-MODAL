@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
+import { useAuth0 } from "@auth0/auth0-react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import ProjectCard from "../components/ProjectCard";
@@ -29,16 +29,17 @@ const Projects = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchProjects = useCallback(async () => {
-    if (!user) {
-      console.error("User not available");
-      setLoading(false);
-      return;
+  const getUserId = useCallback(() => {
+    if (user?.sub) {
+      return user.sub.includes("|") ? user.sub.split("|")[1] : user.sub;
     }
-    
+    return "local_user";
+  }, [user]);
+
+  const fetchProjects = useCallback(async () => {
     setLoading(true);
     try {
-      const userId = user.sub.split("|")[1];
+      const userId = getUserId();
       const response = await axios.get(`http://localhost:8000/s3/projects/${userId}`);
       setProjects(response.data.projects || []);
       setError("");
@@ -48,7 +49,7 @@ const Projects = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [getUserId]);
 
   const checkInstanceStatus = useCallback(async () => {
     try {
@@ -61,7 +62,6 @@ const Projects = () => {
         setInstanceStatus("loading");
         setInstanceDetails(response.data.instance);
       } else {
-        console.log("instanceStatus in checkInstanceStatus", instanceStatus);
         setInstanceStatus("stopped");
         setInstanceDetails(null);
       }
@@ -73,13 +73,13 @@ const Projects = () => {
   }, []);
 
   const handleDelete = async (projectName) => {
-    if (!user || !projectName) {
-      console.error("Missing user information or project name");
+    if (!projectName) {
+      console.error("Missing project name");
       return;
     }
 
     try {
-      const userId = user.sub.split("|")[1];
+      const userId = getUserId();
       await axios.delete(`http://localhost:8000/s3/projects/${userId}/${projectName}`);
       setProjects(projects.filter((project) => project !== projectName));
     } catch (error) {
@@ -191,6 +191,7 @@ const Projects = () => {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const getInstanceTypeLabel = () => {
     if (!instanceDetails || !instanceDetails.instance_type) return null;
     
@@ -203,6 +204,7 @@ const Projects = () => {
     );
   };
 
+  // eslint-disable-next-line no-unused-vars
   const getRegionLabel = () => {
     if (!instanceDetails || !instanceDetails.region) return null;
     
@@ -395,13 +397,4 @@ const Projects = () => {
   );
 };
 
-export default withAuthenticationRequired(Projects, {
-  onRedirecting: () => (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <Loader2 className="w-10 h-10 text-teal-500 mx-auto animate-spin" />
-        <p className="mt-4 text-gray-600 font-medium">Loading authentication...</p>
-      </div>
-    </div>
-  ),
-});
+export default Projects;

@@ -27,7 +27,7 @@ var server = http.createServer(app);
  */
 var io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: true,
     methods: ["GET", "POST"],
     credentials: true
   },
